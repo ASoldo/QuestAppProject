@@ -44,7 +44,7 @@ export default {
     '@nuxt/typescript-build',
     // https://go.nuxtjs.dev/vuetify
     '@nuxtjs/vuetify',
-
+    '@nuxtjs/onesignal',
     '@nuxtjs/pwa',
   ],
 
@@ -55,6 +55,15 @@ export default {
      // Doc: https://axios.nuxtjs.org/usage
     '@nuxtjs/axios',
   ],
+  oneSignal: {
+    init: {
+      appId: '384752d8-c273-4e52-96c4-dbe7642638bf',
+      allowLocalhostAsSecureOrigin: true,
+      welcomeNotification: {
+          disable: true
+      }
+    }
+  },
   axios: {
     // See https://github.com/nuxt-community/axios-module#options
     proxy: true,
