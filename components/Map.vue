@@ -17,7 +17,7 @@
         </l-marker>
 
         <div>
-          <l-marker :riseOnHover="true" ref="markers" autoPan v-for="(item, i) in remaped" :key="i" :lat-lng="remaped[i]._latlng">
+          <l-marker :riseOnHover="true" ref="markers" autoPan v-for="(item, i) in markersList" :key="i" :lat-lng="markersList[i].location">
             <l-popup autoClose closeOnEscapeKey keepInView>
               <soldo></soldo>
             </l-popup>
@@ -69,8 +69,6 @@
 
 <script>
 
-// import leaflet routing from leaflet-routing-machine
-
 import gql from 'graphql-tag'
 const fetchTasks = gql`
   query{
@@ -78,8 +76,10 @@ const fetchTasks = gql`
     id,
     title,
     description,
-    latitude,
-    longitude
+    location{
+      lat
+      lng
+    }
   }
 }
 `;
@@ -139,25 +139,25 @@ export default {
       query: fetchTasks,
     }).then(({data}) => {
       console.log(data.fetchTasks);
-      // this.markersList = data.fetchTasks;
+
       this.markersList = data.fetchTasks;
-      console.log(this.markersList[0].latitude);
+      // console.log(this.markersList[0].location);
 
       //remap markersList longitude and latitude to latlng remaped array
-      this.remaped = this.markersList.map(item => {
-        return {
-          _latlng: {
-            lat: item.latitude,
-            lng: item.longitude
-          },
-          options: {
-            __ob__: {
-              dep: item
-            }
-          }
-        }
-      });
-      console.log(this.remaped);
+      // this.remaped = this.markersList.map(item => {
+      //   return {
+      //     _latlng: {
+      //       lat: item.latitude,
+      //       lng: item.longitude
+      //     },
+      //     options: {
+      //       __ob__: {
+      //         dep: item
+      //       }
+      //     }
+      //   }
+      // });
+      // console.log(this.remaped);
 
       //Vuex logic
       this.$store.commit('increment');
