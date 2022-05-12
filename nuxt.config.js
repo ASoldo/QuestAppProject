@@ -44,13 +44,29 @@ export default {
     '@nuxt/typescript-build',
     // https://go.nuxtjs.dev/vuetify
     '@nuxtjs/vuetify',
+
+    '@nuxtjs/pwa',
   ],
 
   // Modules: https://go.nuxtjs.dev/config-modules
   modules: [
     'nuxt-leaflet',
     '@nuxtjs/apollo',
+     // Doc: https://axios.nuxtjs.org/usage
+    '@nuxtjs/axios',
   ],
+  axios: {
+    // See https://github.com/nuxt-community/axios-module#options
+    proxy: true,
+  },
+  pwa: {
+    icon: false, // disables the icon module
+    manifest: {
+      name: 'Quest App',
+      lang: 'en',
+      useWebmanifestExtension: false
+    }
+  },
   // Apollo configuration
   // httpEndpoint: 'https://beta.pokeapi.co/graphql/v1beta',
   apollo: {
@@ -82,6 +98,12 @@ export default {
 
   // Build Configuration: https://go.nuxtjs.dev/config-build
   build: {
+    /*
+        ** You can extend webpack config here
+        */
+        extend(config, ctx) {
+
+        }
   },
   // Custom server configurations
   server: {
