@@ -13,5 +13,5 @@ jobs:
       - uses: akhileshns/heroku-deploy@v3.12.12 # This is the action
         with:
           heroku_api_key: 3ad05c9c-5302-4715-831f-e7101ea4a9d1
-          heroku_app_name: "quest-app-frontend" #Must be unique in Heroku
-          heroku_email: "soldo.andrej@gmail.com"
+          heroku_app_name: quest-app-frontend #Must be unique in Heroku
+          heroku_email: soldo.andrej@gmail.com
