@@ -107,7 +107,8 @@ export default {
       isActive: false,
       overlay: false,
       currentLocation: '',
-      ctrlr: null
+      ctrlr: null,
+      unwatchPushId: null
     }
   },
   watch: {
@@ -203,6 +204,13 @@ export default {
     leafletRouting.style.border = "1px solid white";
     leafletRouting.style.color = "black";
 
+    this.$OneSignal.push(() => console.log(this.$OneSignal));
+  },
+  beforeDestroy () {
+    if (this.unwatchPushId) {
+      this.unwatchPushId()
+      this.unwatchPushId = null
+    }
   },
   methods: {
     triggerMe(e){
