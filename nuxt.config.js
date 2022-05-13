@@ -24,8 +24,10 @@ export default {
 		],
   },
   env: {
-		MoralisServerUrl: process.env.MORALIS_SERVER_URL,
-		MoralisAppId: process.env.MORALIS_APP_ID,
+		MoralisServerUrl: 'https://p7wtiopjprfk.usemoralis.com:2053/server',
+		// MoralisServerUrl: process.env.MORALIS_SERVER_URL,
+		// MoralisAppId: process.env.MORALIS_APP_ID,
+		MoralisAppId: '3JI4zjKRRDeqAPc7SUrxWcyEZrSHMiCR3J9S9YRE',
 		ContractId: process.env.CONTRACT_ID,
 	},
 
