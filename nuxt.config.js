@@ -16,8 +16,18 @@ export default {
     ],
     link: [
       { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
-    ]
+    ],
+    script: [
+		  {
+			src: "https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"
+		  }
+		],
   },
+  env: {
+		MoralisServerUrl: process.env.MORALIS_SERVER_URL,
+		MoralisAppId: process.env.MORALIS_APP_ID,
+		ContractId: process.env.CONTRACT_ID,
+	},
 
   // Global CSS: https://go.nuxtjs.dev/config-css
   css: [
@@ -32,6 +42,8 @@ export default {
     { src: '~/plugins/vuex-persist.client.js', mode: 'client' },
     { src: '~/plugins/leaflet-routing-machine.client.js', mode: 'client' },
     { src: '~/plugins/geocoder.client.js', mode: 'client' },
+    // { src: '~/plugins/web3.client.js', mode: 'client' },
+    { src: '~/plugins/moralis.client.js', mode: 'client' },
 
   ],
 

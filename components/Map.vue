@@ -4,6 +4,11 @@
   <!-- <v-btn @click="removeMarkers()">SOldo</v-btn>
   <input v-model="input" type="text" placeholder="Type"><button @click="addText(input)">Save</button> -->
   <!-- <h1 class="wow animate animate__bounce" data-wow-iteration="1">{{now}}</h1> -->
+  <div v-if="this.currentUser !== null" style="position:absolute; bottom:22px; left:5px; z-index: 100000;">
+      <div style="width: 10px; height: 10px; border-radius: 50px; background-color: green;">
+
+      </div>
+  </div>
     <l-map ref="myMap" @contextmenu="logme($event)" @click="onMapClick($event)" @ready="doSomethingOnReady()" class="cursor-pointer">
       <l-tile-layer url="https://{s}.tile.jawg.io/jawg-matrix/{z}/{x}/{y}{r}.png?access-token=Hy1akLD3IImunuiWSB3zREeRuryl8B1SK8qVjDsLh7IuihnNs1QIJsWt8MVKiAOP"></l-tile-layer>
 
@@ -108,7 +113,17 @@ export default {
       overlay: false,
       currentLocation: '',
       ctrlr: null,
-      unwatchPushId: null
+      unwatchPushId: null,
+      contractAddress: null,
+			multiplier: 1000000000000000000,
+			mintPrice: 0.15,
+			currentUser: null,
+			walletAddress: null,
+			ethBalance: null,
+			nftsForContract: null,
+			nftCount: null,
+			loading: false,
+			showError: false
     }
   },
   watch: {
@@ -123,16 +138,20 @@ export default {
     },
   },
   computed: {
-  now() {
-    return Date.now()
-  }
-},
+    now() {
+      return Date.now()
+    }
+  },
+  name: 'v-map',
   components:{
     'popup-comp': PopupComp,
     'soldo': Soldo
   },
   created(){
-    //find class .leaflet-routing-container and add class .leaflet-routing-container-custom
+
+    this.currentUser = this.$Moralis.User.current();
+    this.login();
+    // this.contractAddress = process.env.ContractId;
 
 
     //log id and title for fetchTasks
@@ -142,34 +161,19 @@ export default {
       console.log(data.fetchTasks);
 
       this.markersList = data.fetchTasks;
-      // console.log(this.markersList[0].location);
-
-      //remap markersList longitude and latitude to latlng remaped array
-      // this.remaped = this.markersList.map(item => {
-      //   return {
-      //     _latlng: {
-      //       lat: item.latitude,
-      //       lng: item.longitude
-      //     },
-      //     options: {
-      //       __ob__: {
-      //         dep: item
-      //       }
-      //     }
-      //   }
-      // });
-      // console.log(this.remaped);
 
       //Vuex logic
       this.$store.commit('increment');
       console.log(this.$store.state.count);
 
-
     }).catch((error) => {
       console.log(error);
     });
+
+
   },
   mounted(){
+    this.currentUser = null;
     this.map = this.$refs.myMap.mapObject;
     this.$nextTick(() => {
       if (process.browser) { // On the page mounted In the life cycle Instantiate according to the environment WOW
@@ -204,13 +208,16 @@ export default {
     leafletRouting.style.border = "1px solid white";
     leafletRouting.style.color = "black";
 
-    this.$OneSignal.push(() => console.log(this.$OneSignal));
+    if(this.currentUser) this.getUserWalletDetail();
+
+    // this.$OneSignal.push(() => console.log(this.$OneSignal));
   },
   beforeDestroy () {
     if (this.unwatchPushId) {
       this.unwatchPushId()
       this.unwatchPushId = null
     }
+
   },
   methods: {
     triggerMe(e){
@@ -283,41 +290,82 @@ export default {
 
      },
 
-     //create a marker on click
-      onMapClick(e) {
-        var newMarker = this.$L.marker(e.latlng);
+    //create a marker on click
+    onMapClick(e) {
+      var newMarker = this.$L.marker(e.latlng);
 
-        // newMarker.openPopup();
-        // console.log(newMarker, "newMarker");
-        // console.log(newMarker.getLatLng().lat);
-        // console.log(newMarker.getLatLng().lng);
+      // newMarker.openPopup();
+      // console.log(newMarker, "newMarker");
+      // console.log(newMarker.getLatLng().lat);
+      // console.log(newMarker.getLatLng().lng);
 
-        //get id from newMarker
-        // this.coordZ = e.latlng;
-        this.markerList.push(newMarker);
+      //get id from newMarker
+      // this.coordZ = e.latlng;
+      this.markerList.push(newMarker);
 
-        //open popup
+      //open popup
 
 
-        console.log(this.markerList);
-        this.map.panTo(e.latlng, 20);
+      console.log(this.markerList);
+      this.map.panTo(e.latlng, 20);
 
-        //get refs
+      //get refs
 
-      },
+    },
 
       //remove marker by id
-      removeMarker(id) {
-        this.markerList = this.markerList.filter(item => item.options.__ob__.dep.id !== id);
-      },
+    removeMarker(id) {
+      this.markerList = this.markerList.filter(item => item.options.__ob__.dep.id !== id);
+    },
 
-      buttonPressed(i, it) {
-        console.log('button pressed ' + i + ' ' + it);
-      },
-      logme(e){
-        console.log('logme;', e.latlng);
+    buttonPressed(i, it) {
+      console.log('button pressed ' + i + ' ' + it);
+    },
+    logme(e){
+      console.log('logme;', e.latlng);
 
-      }
+    },
+    async login() {
+
+					try {
+						this.currentUser = await this.$Moralis.authenticate({ signingMessage: "Hello World!" })
+						this.getUserWalletDetail();
+						this.showError = false
+					} catch (error) {
+						console.log(error)
+						this.showError = true
+					}
+
+
+
+			},
+			async getUserWalletDetail(){
+				this.loading = true
+				this.walletAddress = this.currentUser.get('ethAddress')
+				// this.ethBalance = await this.$Moralis.Web3API.account.getNativeBalance();
+				this.ethBalance = await this.$Moralis.Web3API.account.getNativeBalance({chain: 'rinkeby'});
+				// this.nftsForContract = await this.$Moralis.Web3API.account.getNFTsForContract({ token_address: this.contractAddress })
+				// this.nftCount = await this.$Moralis.Web3.getNFTsCount({ token_address: this.contractAddress })
+				this.ethBalance = Number(this.ethBalance.balance / this.multiplier)
+				this.loading = false
+        console.log('Address', this.walletAddress);
+        console.log('Balance', this.ethBalance);
+        //get network name
+
+
+
+			},
+			async logOut() {
+				await this.$Moralis.User.logOut()
+				this.resetState()
+			},
+			resetState(){
+				this.currentUser = null
+				this.walletAddress = null
+				this.ethBalance = null
+				this.nftsForContract = null
+				this.nftCount = null
+			}
   },
 }
 </script>
