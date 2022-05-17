@@ -23,6 +23,7 @@
         "./*"
       ]
     },
+    "jsx":"preserve",
     "types": [
       "@nuxt/types",
       "@types/node",
