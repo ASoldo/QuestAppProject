@@ -6,7 +6,6 @@
       :clipped="clipped"
       fixed
       app
-
       style="max-height: 100vh;"
     >
       <v-list>
@@ -31,51 +30,62 @@
       fixed
       app
     >
-
       <v-app-bar-nav-icon @click.stop="drawer = !drawer" />
-      <!-- <h1 v-for="(index, i) character in characters.result" :key="character.id">{{ character }}</h1> -->
-
-      <!-- <v-btn
-        icon
-        @click.stop="miniVariant = !miniVariant"
-      >
-        <v-icon>mdi-{{ `chevron-${miniVariant ? 'right' : 'left'}` }}</v-icon>
-      </v-btn> -->
-      <!-- <v-btn
-        icon
-        @click.stop="clipped = !clipped"
-      >
-        <v-icon>mdi-application</v-icon>
-      </v-btn> -->
-      <!-- <v-btn
-        icon
-        @click.stop="fixed = !fixed"
-      >
-        <v-icon>mdi-minus</v-icon>
-      </v-btn> -->
       <v-toolbar-title v-text="title" />
       <v-spacer />
-      <!-- <v-text-field placeholder="Search..."></v-text-field>
-      <v-spacer /> -->
 
-     <!-- <h1 v-for="(char, i) in gen3_species" :key="i">{{char.name}}</h1> -->
-      <v-btn
+      <!-- <v-btn
         icon
-        @click.stop="rightDrawer = !rightDrawer"
-      >
+        @click.stop="rightDrawer = !rightDrawer">
         <v-icon>mdi-menu</v-icon>
       </v-btn>
-
-      <v-btn @click="getPokeAPI()">GQL Call</v-btn>
+       -->
+      <v-btn v-if="this.$store.state.user.accessToken === null"
+        color="success"
+        @click="overlay = !overlay">
+        {{overlay ? 'Close' : 'Log In'}}
+      </v-btn>
+      <v-btn v-else color="warning" @click="$store.commit('logOut')">Log Out</v-btn>
     </v-app-bar>
-    <v-main style="padding-bottom: 0px;">
 
+    <v-main style="padding-bottom: 0px;">
       <v-container fluid class="fill-height pa-0 ma-0">
         <Nuxt />
-
       </v-container>
-
     </v-main>
+
+    <!-- Login -->
+    <v-overlay :z-index="0" :value="overlay" :absolute="true">
+      <v-container>
+        <v-row>
+          <v-col>
+            <v-card class="pa-5" style="outline: 1px solid white;">
+              <v-card-actions>Login
+                <v-row class="justify-end">
+                  <v-btn small color="warning" @click="overlay = !overlay"><v-icon>mdi-close</v-icon></v-btn>
+                </v-row>
+              </v-card-actions>
+              <v-text-field v-model="temp_phone" placeholder="Phone" type="text"></v-text-field>
+              <v-text-field v-model="temp_pass" placeholder="Password" type="password"></v-text-field>
+              <v-btn color="success" @click="logIn(); overlay = !overlay">Log In</v-btn>
+              <v-btn color="blue" @click="reveal = !reveal">Register</v-btn>
+              <v-expand-transition>
+                <v-card style="" v-if="reveal" class="pa-5 transition-fast-in-fast-out v-card--reveal">
+                  <v-card-actions>Register
+                    <v-row class="justify-end">
+                    <v-btn color="warning" small @click="reveal = !reveal"><v-icon>mdi-close</v-icon></v-btn>
+                  </v-row>
+                  </v-card-actions>
+                  <v-text-field v-model="temp_phone" placeholder="Phone" type="text"></v-text-field>
+                  <v-text-field v-model="temp_pass" placeholder="Password" type="password"></v-text-field>
+                  <v-btn color="success" @click="register(); overlay = !overlay">Register</v-btn>
+                </v-card>
+              </v-expand-transition>
+            </v-card>
+          </v-col>
+        </v-row>
+      </v-container>
+    </v-overlay>
 
     <v-navigation-drawer
       v-model="rightDrawer"
@@ -110,30 +120,34 @@
 
 import gql from 'graphql-tag'
 
-const samplePokeAPIquery = gql`
-  query samplePokeAPIquery {
-  gen3_species: pokemon_v2_pokemonspecies(where: {pokemon_v2_generation: {name: {_eq: "generation-iii"}}}, order_by: {id: asc}) {
-    name
-    id
-  }
-  generations: pokemon_v2_generation {
-    name
-    pokemon_species: pokemon_v2_pokemonspecies_aggregate {
-      aggregate {
-        count
-      }
-    }
-  }
-}
-`;
+// const samplePokeAPIquery = gql`
+// query samplePokeAPIquery {
+//   gen3_species: pokemon_v2_pokemonspecies(where: {pokemon_v2_generation: {name: {_eq: "generation-iii"}}}, order_by: {id: asc}) {
+//     name
+//     id
+//   }
+//   generations: pokemon_v2_generation {
+//     name
+//     pokemon_species: pokemon_v2_pokemonspecies_aggregate {
+//       aggregate {
+//         count
+//       }
+//     }
+//   }
+// }`;
+
 
 export default {
   name: 'DefaultLayout',
   data () {
     return {
+      temp_phone: '',
+      temp_pass: '',
+      reveal: false,
+      overlay: false,
       clipped: true,
-      drawer: true,
-      fixed: true,
+      drawer: false,
+      fixed: false,
       items: [
         {
           icon: 'mdi-apps',
@@ -154,7 +168,6 @@ export default {
   },
   created () {
     console.log('DefaultLayout created')
-    // this.getPokeAPI();
   },
   methods: {
     getPokeAPI() {
@@ -162,6 +175,45 @@ export default {
         query: samplePokeAPIquery
       }).then(({data}) => {
         console.log(data);
+      }).catch((error) => {
+        console.log(error);
+      });
+    },
+    logIn(){
+      this.$apollo.mutate({
+        mutation: gql`
+        mutation{
+          localLogin(input:{phoneNumber: "${this.temp_phone}", password:"${this.temp_pass}"}) {
+            userId
+            accessToken
+          }
+        }`
+      }).then(({data}) => {
+        console.log(data);
+        this.$store.commit('setUser', data.localLogin);
+        this.temp_phone = '';
+        this.temp_pass = '';
+        this.reveal = false;
+      }).catch((error) => {
+        console.log(error);
+      });
+    },
+    register(){
+      this.$apollo.mutate({
+        mutation: gql`
+        mutation{
+          localRegistration(input:{phoneNumber: "${this.temp_phone}", password:"${this.temp_pass}"}) {
+            id
+            createdAt
+            phoneNumber
+          }
+        }`
+      }).then(({data}) => {
+        console.log(data);
+        this.logIn();
+        this.temp_phone = '';
+        this.temp_pass = '';
+        this.reveal = false;
       }).catch((error) => {
         console.log(error);
       });
@@ -194,3 +246,15 @@ export default {
 //       update: data => data.client
 //     }
 //   }
+
+<style scoped>
+.v-card--reveal {
+  bottom: 0px;
+  left: 0px;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  margin: 0px;
+  padding: 0px;
+}
+</style>

@@ -1,6 +1,7 @@
 <template>
 
   <v-container @keyup.ctrl.space="overlayLogic()" v-bind:class="{ active: isActive }" id="map-wrap" fluid class="pa-0 fill-height" style="z-index: 0; padding-bottom: 56px !important;">
+
   <!-- <v-btn @click="removeMarkers()">SOldo</v-btn>
   <input v-model="input" type="text" placeholder="Type"><button @click="addText(input)">Save</button> -->
   <!-- <h1 class="wow animate animate__bounce" data-wow-iteration="1">{{now}}</h1> -->
@@ -99,6 +100,7 @@ export default {
 
   data(){
     return {
+      overlay: false,
       map: null,
       markerArray: [],
       markerList: [],
@@ -123,7 +125,8 @@ export default {
 			nftsForContract: null,
 			nftCount: null,
 			loading: false,
-			showError: false
+			showError: false,
+      web3Instance: null,
     }
   },
   watch: {
@@ -148,6 +151,28 @@ export default {
     'soldo': Soldo
   },
   created(){
+    window.ethereum.enable;
+    this.web3Instance = window.ethereum;
+
+     if (this.web3Instance) {
+    // Listening to Event
+
+    //check if user is logged in and attach event listener
+
+
+    var self = this;
+    this.web3Instance.on('accountsChanged', function (accounts) {
+      console.log(accounts[0]);
+      if(accounts[0] === undefined){
+        this.currentUser = null;
+        console.log('no account');
+        self.$router.push({name: 'inspire'});
+      }
+     });
+    //    this.$Moralis.on('chainChanged', (e) => {
+    //      console.log(e);
+    //    });
+   }
 
     this.currentUser = this.$Moralis.User.current();
     this.login();
@@ -169,6 +194,9 @@ export default {
     }).catch((error) => {
       console.log(error);
     });
+
+
+
 
 
   },
@@ -218,6 +246,16 @@ export default {
       this.unwatchPushId = null
     }
 
+    // this.web3Instance.removeListener('accountsChanged', (accounts) => {
+    //   console.log("Shit is deleted");
+
+    //  });
+
+   //remove event listener
+
+
+  },
+  destroyed(){
   },
   methods: {
     triggerMe(e){
@@ -327,10 +365,11 @@ export default {
     },
     async login() {
 
+
 					try {
-						this.currentUser = await this.$Moralis.authenticate({ signingMessage: "Hello World!" })
+						this.currentUser = await this.$Moralis.authenticate({ signingMessage: "LogIn!" })
 						this.getUserWalletDetail();
-						this.showError = false
+						this.showError = false;
 					} catch (error) {
 						console.log(error)
 						this.showError = true
@@ -348,8 +387,10 @@ export default {
 				// this.nftCount = await this.$Moralis.Web3.getNFTsCount({ token_address: this.contractAddress })
 				this.ethBalance = Number(this.ethBalance.balance / this.multiplier)
 				this.loading = false
+        this.$store.commit('setAccount', this.currentUser);
         console.log('Address', this.walletAddress);
         console.log('Balance', this.ethBalance);
+
         //get network name
 
 
