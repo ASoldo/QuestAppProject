@@ -15,7 +15,6 @@ jobs:
       - name: Run tests
         run: npm run test
 
-      - uses: actions/checkout@v2
       - uses: akhileshns/heroku-deploy@v3.12.12 # This is the action
         with:
           heroku_api_key: 3ad05c9c-5302-4715-831f-e7101ea4a9d1
